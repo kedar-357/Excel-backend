@@ -259,7 +259,8 @@ exports.createFolder = async (req, res) => {
     await folder.save();
     res.status(201).json(folder);
   } catch (error) {
-    res.status(500).json({ message: 'Error creating folder' });
+    console.error('Error creating folder:', error);
+    res.status(500).json({ message: 'Error creating folder', error: error.message });
   }
 };
 
@@ -270,7 +271,8 @@ exports.getFolders = async (req, res) => {
     const folders = await Folder.find({ userId }).sort({ createdAt: -1 });
     res.json(folders);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching folders' });
+    console.error('Error fetching folders:', error);
+    res.status(500).json({ message: 'Error fetching folders', error: error.message });
   }
 };
 
@@ -282,7 +284,8 @@ exports.getProjectsInFolder = async (req, res) => {
     const projects = await Project.find({ userId, folderId });
     res.json(projects);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching projects in folder' });
+    console.error('Error fetching projects in folder:', error);
+    res.status(500).json({ message: 'Error fetching projects in folder', error: error.message });
   }
 };
 
@@ -298,6 +301,7 @@ exports.moveProject = async (req, res) => {
     await project.save();
     res.json({ message: 'Project moved successfully', project });
   } catch (error) {
-    res.status(500).json({ message: 'Error moving project' });
+    console.error('Error moving project:', error);
+    res.status(500).json({ message: 'Error moving project', error: error.message });
   }
 }; 
