@@ -50,7 +50,6 @@ const projectSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
-
 // Index for faster queries
 projectSchema.index({ userId: 1, createdAt: -1 });
 
