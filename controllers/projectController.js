@@ -50,6 +50,9 @@ exports.createProject = async (req, res) => {
       }));
     }
 
+    // Store preview data (first 5 rows) in database
+    const previewData = objectData.slice(0, 5);
+
     // Create project
     const project = new Project({
       userId,
@@ -58,6 +61,7 @@ exports.createProject = async (req, res) => {
       filePath: req.file.path,
       originalFileName: req.file.originalname,
       data: chartData,
+      previewData: previewData,
       chartConfig: Object.assign(
         { xAxis, yAxis },
         (chartType === 'bubble' && bubbleSize) ? { bubbleSize } : {}
@@ -184,39 +188,13 @@ exports.getProjectPreview = async (req, res) => {
   try {
     const { projectId } = req.params;
     const userId = req.user.id;
-
     const project = await Project.findOne({ _id: projectId, userId });
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
-
-    // Read the Excel file
-    const XLSX = require('xlsx');
-    const fs = require('fs');
-    if (!fs.existsSync(project.filePath)) {
-      return res.status(404).json({ message: 'Excel file not found' });
-    }
-    const workbook = XLSX.readFile(project.filePath);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-    const cleanData = jsonData.filter(row => row.some(cell => cell !== null && cell !== ''));
-    // Get first 6 rows (header + 5 data rows)
-    const previewRows = cleanData.slice(0, 6);
-    // Convert to array of objects using headers
-    function arrayToObjects(data) {
-      if (!data || data.length < 2) return [];
-      const headers = data[0];
-      return data.slice(1).map(row => {
-        const obj = {};
-        headers.forEach((header, i) => {
-          obj[header] = row[i];
-        });
-        return obj;
-      });
-    }
-    const previewObjects = arrayToObjects(previewRows);
-    res.json({ preview: previewObjects });
+    
+    // Return preview data from database instead of reading from ephemeral disk
+    res.json({ preview: project.previewData || [] });
   } catch (error) {
     console.error('Error fetching project preview:', error);
     res.status(500).json({ message: 'Error fetching project preview' });
@@ -251,6 +229,7 @@ exports.duplicateProject = async (req, res) => {
       filePath: newFilePath || original.filePath,
       originalFileName: newOriginalFileName || original.originalFileName,
       data: original.data,
+      previewData: original.previewData,
       chartConfig: original.chartConfig
     });
     await duplicate.save();
