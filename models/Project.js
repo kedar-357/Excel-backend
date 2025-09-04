@@ -38,6 +38,10 @@ const projectSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     default: null
   },
+  previewData: {
+    type: mongoose.Schema.Types.Mixed,
+    default: []
+  },
   chartConfig: {
     type: mongoose.Schema.Types.Mixed,
     default: {}
